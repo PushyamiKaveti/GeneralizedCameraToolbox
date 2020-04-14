@@ -18,10 +18,7 @@ from helper_functions import helper_functions
 import argparse
 
 
-
-
 fig1,ax1 = helper_functions.initialize_3d_plot(number=1, limits = np.array([[-10,10],[-10,10],[-10,10]]), view=[-30,-90])
-helper_functions.set_axes_equal(ax1)
 
 T1 = np.eye(4)
 helper_functions.plot_camera(ax1, T1, f=1.0)
@@ -33,6 +30,6 @@ T2 = np.array([[  0.7071068,  0.0000000, -0.7071068, 5.0],
 
 helper_functions.plot_camera(ax1, T2, f=1.0)
 
-plt.pause(.5)
-
+#plt.pause(.5)
+plt.show()
 

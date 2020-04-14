@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 #from scipy import spatial
 import matplotlib.patches as mpatches
+import sys
 
 def theta_2_rot2d(theta):
     ''' 
@@ -178,7 +179,6 @@ def initialize_3d_plot(number=None, title='Plot', axis_labels=['x', 'y', 'z'],vi
     fig.clf()
     ax = fig.add_subplot(111, projection='3d')
     fig.subplots_adjust(0,0,1,1) # Make the plot tight
-    ax.set_aspect('equal')
     fig.suptitle(title)
     ax.set_xlabel(axis_labels[0])
     ax.set_ylabel(axis_labels[1])
@@ -189,6 +189,8 @@ def initialize_3d_plot(number=None, title='Plot', axis_labels=['x', 'y', 'z'],vi
         ax.set_zlim(*limits[2,:])
 
     ax.view_init(*view)
+    if sys.version_info[:2] == (3, 5):
+        ax.set_aspect('equal')
     return fig,ax
 
 def initialize_2d_plot(number=None, title='Plot', axis_labels=['x', 'y'],axis_equal=False):
@@ -200,6 +202,7 @@ def initialize_2d_plot(number=None, title='Plot', axis_labels=['x', 'y'],axis_eq
     ax.set_ylabel(axis_labels[1])
     if axis_equal:
         ax.axis('equal')
+
     #fig.subplots_adjust(0.1,0.1,.9,.9) # Make the plot tight
     return fig,ax
 
