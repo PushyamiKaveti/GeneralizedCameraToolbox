@@ -1,0 +1,116 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 14 14:48:33 2020
+
+@author: Pushyami Kaveti
+"""
+import numpy as np
+
+
+class Plucker:
+    '''
+    Constructor for creating plucker vector from two 
+    3D points in space
+    '''
+    def from_points(self, p1, p2):
+        self.l = p2 - p1
+        self.w = np.cross(p1, self.l )
+       
+    '''
+    Constructor for creating plucker vector from a 
+    3D point in space and the direction of the ray
+    typ should be 'point-dir'
+    '''
+    def from_point_dir(self, p1, d):
+        self.l = d
+        self.w = np.cross(p1,d)
+
+    ''' 
+    from a direction vector and moment vector 
+    typ should be 'dir-moment'
+    '''
+    def from_dir_moment(self, d, m):
+        self.l = d
+        self.w = m
+        
+    def __init__(self, p1, p2, typ='default'):
+        if typ == 'default':
+            self.from_points(p1, p2)            
+        if typ=='point-dir':
+            self.from_point_dir(p1,p2)
+        elif typ == 'dir-moment':
+            self.from_dir_moment(p1,p2)
+            
+    '''
+     Method to compute the Distance of the plucker 
+     line from the origin. d=|w|/|q|
+    '''
+    def distance_to_origin(self):
+        d = np.norm(self.w)/ np.linalg.norm(self.l)
+        return d
+    
+    '''
+     Method to compute the Distance of the plucker 
+     line from the origin. p = l x m / |l|^2
+     '''
+    def closest_point_to_origin(self):
+        p = np.cross(self.l , self.w)/ np.dot(self.l, self.l)
+        return p
+    
+    '''
+     Method to compute the the reciprocal product
+     of two plucker vectors pl1 and pl2
+     (l1,m1) * (l2 , m2) = l1^ . m2 + l2^ . m1
+     '''
+    @staticmethod
+    def reciprocal_product(pl1, pl2):
+        u1 = pl1.l / np.linalg.norm(pl1.l)
+        u2 = pl2.l / np.linalg.norm(pl2.l)
+        rec_prod = np.dot(u1,pl2.m) + np.dot(u2, pl1.m)
+        return rec_prod
+    
+    '''
+     Method to generate a point on the plucker line
+     p = (l x m / |l|^2) + lamda *  l^
+     '''
+    def gen_point(self, lamda):
+        u1 = self.l / np.linalg.norm(self.l)
+        p = self.closest_point_to_origin() + lamda * u1
+        return p
+    
+    
+    '''
+    Method to check if two plucker lines are parallel 
+    l1 x l1 = 0
+    '''    
+    @staticmethod
+    def is_parallel(pl1, pl2):
+        v = np.linalg.norm( np.cross(pl1.l, pl2.l) ) < 10*np.finfo(float).eps 
+        return v
+    
+    '''
+    Method to calculate the point of intersection 
+    between two plucker lines. If the lines are not
+    parallel and not co-planar then the point of 
+    intersection is given by
+    p = ((m1.l2) I + l1 m2.T - l2 m1.T ) * (l1 x l2)/ |l1 x l2|^2
+    '''
+    @staticmethod
+    def point_of_intersection(pl1, pl2):
+        if is_parallel(pl1, pl2) and reciprocal_product(pl1, pl2) > 10*np.finfo(float).eps :
+            return 0
+        else:
+            tmp = np.dot(pl1.m, pl2.l) * np.eye(3) + np.outer(pl1.l, pl2.m) - np.outer(pl2.l - pl1.m)
+            c = np.cross(pl1.l,pl2.l)
+            p = tmp * c / np.dot(c,c)
+            return p
+    
+    '''
+    Method to find the point of intersection of 
+    the plucker vector with a plane
+    '''
+    @staticmethod
+    def point_of_intersection_plane(pl, plane):
+        pass
+           
+            
