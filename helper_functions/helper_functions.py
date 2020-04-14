@@ -217,30 +217,76 @@ def transform_3d_pts(pts, T):
     Take 3D points a Nx3 array along with 4 x 4 Homogenous Tranform and return 
     transformed points
     '''
-    hom_pts = np.column_stack((pts, np.ones(pts.shape[0])))
-    trans_pts_hom = hom_pts @ T.T
-    return trans_pts_hom[:,:-1]
+    if pts.ndim == 1:
+        pts2d = np.expand_dims(pts, axis=0)
+        hom_pts2d = np.column_stack((pts2d, np.ones(pts2d.shape[0])))
+        trans_pts_hom2d = hom_pts2d @ T.T
+        return trans_pts_hom2d[0,:-1]
+    else:
+        hom_pts = np.column_stack((pts, np.ones(pts.shape[0])))
+        trans_pts_hom = hom_pts @ T.T
+        return trans_pts_hom[:,:-1]
 
-def plot_3d_rect(axes, vertices):
-     axes.plot(vertices[[0,-1],0], vertices[[0,-1],1], vertices[[0,-1],2], 'k')
-     axes.plot(vertices[0:2,0], vertices[0:2,1], vertices[0:2,2], 'k')
-     axes.plot(vertices[1:3,0], vertices[1:3,1], vertices[1:3,2], 'k')
-     axes.plot(vertices[2:4,0], vertices[2:4,1], vertices[2:4,2], 'k')
+def plot_3d_rect(axes, vertices, *args, **kwargs):
+     axes.plot(vertices[[0,-1],0], vertices[[0,-1],1], vertices[[0,-1],2], *args, **kwargs)
+     axes.plot(vertices[0:2,0], vertices[0:2,1], vertices[0:2,2], *args, **kwargs)
+     axes.plot(vertices[1:3,0], vertices[1:3,1], vertices[1:3,2], *args, **kwargs)
+     axes.plot(vertices[2:4,0], vertices[2:4,1], vertices[2:4,2], *args, **kwargs)
      
-def lines_between_rect(axes, vertices1, vertices2):
+def lines_between_rect(axes, vertices1, vertices2, *args, **kwargs):
     for v1,v2 in zip(vertices1,vertices2):
         pts = np.vstack((v1,v2))
-        axes.plot(pts[:,0], pts[:,1], pts[:,2], 'k')
+        axes.plot(pts[:,0], pts[:,1], pts[:,2], *args, **kwargs)
 
-def plot_camera(axes, pose_wT_cam, f=1.0  ):
+def plot_camera(axes, pose_wT_cam, f=1.0, *args, **kwargs):
    
     opt_cent_rect_P_cam = rectangle_xy(width=1.0, height=1.0)
     img_plane_rect_P_cam = rectangle_xy(width=2.0, height=2.0)+np.array([0,0,f])
     opt_cent_rect_P_w = transform_3d_pts(opt_cent_rect_P_cam, pose_wT_cam)
     img_plane_rect_P_w = transform_3d_pts(img_plane_rect_P_cam, pose_wT_cam)
-    plot_3d_rect(axes, opt_cent_rect_P_w )
-    plot_3d_rect(axes, img_plane_rect_P_w )
-    lines_between_rect(axes, opt_cent_rect_P_w, img_plane_rect_P_w)
+    plot_3d_rect(axes, opt_cent_rect_P_w, *args, **kwargs )
+    plot_3d_rect(axes, img_plane_rect_P_w, *args, **kwargs )
+    lines_between_rect(axes, opt_cent_rect_P_w, img_plane_rect_P_w, *args, **kwargs)
     plot_pose3_on_axes(axes, pose_wT_cam, axis_length=0.5)
 
+def plot_3Dvector(axes, V, origin = np.zeros(3)):
+    '''
+    (x,y,z) = (x0, y0, z0) + t(a, b, c)
+    X = X0 + tV
+    Here t is a parameter describing a particular point on the line L
+    Parametric Form
+    x = x0 + t_a
+    y = y0 + t_b
+    z = z0 + t_c
     
+    Interzection with plane z = z1
+    z1 = z0 + t_c
+    t1 = (z1 - z0)/c
+    '''
+    X0 = origin
+    z1, z2 = axes.get_zlim3d()
+    
+    z0 = X0[2]
+    c = V[2]
+    t1 = (z1 - z0)/c
+    t2 = (z2 - z0)/c
+    
+    pt1 = X0 + t1*V
+    pt2 = X0 + t2*V
+    
+    pts = np.vstack((pt1,pt2))
+    axes.plot(pts[:,0], pts[:,1], pts[:,2], color='grey',linewidth = 1 )
+    
+def plot_cam_array(axes, T_array, wTa, *args, **kwargs):
+    '''
+    Plot a camera array where:
+      T_array is N x 4 x 4 array defining the camera poses in the array
+      wTa is the position of the array in the world reference frame
+    '''
+    wT_array = wTa @ T_array
+    for cam_num, wTc in enumerate(wT_array):
+        plot_camera(axes, wTc, f=1.0, *args, **kwargs)
+        if cam_num>0:
+            wtc_prev = wT_array[cam_num-1]
+            pts = np.vstack((wTc[:-1,-1], wtc_prev[:-1,-1]))
+            axes.plot(pts[:,0],pts[:,1],pts[:,2], *args, **kwargs)
