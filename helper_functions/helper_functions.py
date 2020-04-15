@@ -83,7 +83,14 @@ def skew(v):
     return  np.array([[   0,  -v[2],  v[1] ],
                       [ v[2],    0 , -v[0] ],
                       [-v[1],  v[0],    0  ]])
-    
+
+def euclid_to_homo(v):
+    return np.append(v, np.ones((1,v.shape[1])), axis=0)
+
+def homo_to_euclid(v):
+    v = v/ v[-1]
+    return v[:-1] 
+
 def normal2rot(a, b=np.array([0.0,0.0,1.0])):
     '''
     Return Rotation matrix that rotates a vector to z-axis
