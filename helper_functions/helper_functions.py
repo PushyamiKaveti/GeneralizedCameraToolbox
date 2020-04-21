@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 #from scipy import spatial
 import matplotlib.patches as mpatches
 import sys
+from random_geometry_points.sphere import Sphere
 
 def theta_2_rot2d(theta):
     ''' 
@@ -88,7 +89,7 @@ def euclid_to_homo(v):
     return np.append(v, np.ones((1,v.shape[1])), axis=0)
 
 def homo_to_euclid(v):
-    v = v/ v[-1]
+    v = v / v[-1]
     return v[:-1] 
 
 def normal2rot(a, b=np.array([0.0,0.0,1.0])):
@@ -213,6 +214,17 @@ def initialize_2d_plot(number=None, title='Plot', axis_labels=['x', 'y'],axis_eq
     #fig.subplots_adjust(0.1,0.1,.9,.9) # Make the plot tight
     return fig,ax
 
+def initialize_2d_plot_multi(number=None,num_rows=1,num_cols=2, title='Plot', axis_labels=['x', 'y'],axis_equal=False):
+    fig, axs = plt.subplots(num_rows, num_cols)
+    fig.suptitle(title)
+    for ax in axs:
+        ax.set_xlabel(axis_labels[0])
+        ax.set_ylabel(axis_labels[1])
+        if axis_equal:
+            ax.axis('equal')
+    #fig.subplots_adjust(0.1,0.1,.9,.9) # Make the plot tight
+    return fig,axs[np.newaxis, :]
+
 def rectangle_xy(width = 1, height = 1):
     return np.array([[ width/2,  height/2, 0],
                      [-width/2,  height/2, 0],
@@ -297,3 +309,13 @@ def plot_cam_array(axes, T_array, wTa, *args, **kwargs):
             wtc_prev = wT_array[cam_num-1]
             pts = np.vstack((wTc[:-1,-1], wtc_prev[:-1,-1]))
             axes.plot(pts[:,0],pts[:,1],pts[:,2], *args, **kwargs)
+
+def generate_3D_points(num_points,typ="sphere", *args, **kwargs):
+    sphere = Sphere(kwargs['x_c'], kwargs['y_c'], kwargs['z_c'], kwargs['rad'])
+    random_sphere_points = sphere.create_random_points(num_points)
+    pp = np.array(random_sphere_points)
+    # normal_vec = (0, 0.0, 1.0)
+    #ref_point = (0.0, 0.0, 5.0)
+    #plane = Plane(normal_vec, 5.0, ref_point, 10.0)
+    #random_plane_points = plane.create_random_points(50)
+    return pp.T

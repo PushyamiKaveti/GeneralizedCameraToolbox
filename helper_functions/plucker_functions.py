@@ -16,8 +16,7 @@ class Plucker:
     
         Parameters
         ----------
-        p1 : TYPE
-            DESCRIPTION.
+        p1 : 
         p2 : TYPE
             DESCRIPTION.
 
@@ -64,6 +63,7 @@ class Plucker:
             self.from_point_dir(p1,p2)
         elif typ == 'dir-moment':
             self.from_dir_moment(p1,p2)
+
 
     def distance_to_origin(self):
         '''
