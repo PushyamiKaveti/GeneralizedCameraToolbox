@@ -38,14 +38,39 @@ class GeneralizedCamera:
         P = helper_functions.euclid_to_homo(P)
         P_local = tmp @ P
         N = P.shape[1]
-        masks = np.zeros((self.num_cams,1,N))
+        masks = np.zeros((self.num_cams,1,N), dtype=bool)
         p_all = np.zeros((self.num_cams,2,N))
         for i, c in enumerate(self.cams):
             p_all[i], masks[i] = c.project(P_local)
         return p_all, masks
     
     def get_plucker_coords(self,p):
-        pass
+        '''
+        Method to compute the plucker vectprs for the image points p
+        in the generalized camera reference frame
+        Parameters
+        ----------
+        p : num_cams X 2 X N image coordinates
+        masks : num_cams X 1 X N boolean array representing valid image coordinates
+        Returns
+        -------
+        PL_all : num_cams X 6 X N plucker coordinates of p in the 
+        generalized camera reference frame
+
+        '''
+        N = p.shape[2]
+        PL_all = np.zeros((self.num_cams,6,N))
+        for i, c in enumerate(self.cams):
+            #plucker vectors in camera ref frame
+            pl_tmp = c.get_plucker_coords(p[i])
+            #plucker vectors in generalized camera ref frame
+            GE_tmp = np.zeros((6,6))
+            GE_tmp[0:3, 0:3] = c.poseR
+            GE_tmp[3:6, 3:6] = c.poseR
+            GE_tmp[3:6, 0:3] = helper_functions.skew(c.poset[:,0]) @ c.poseR
+            PL_all[i] = GE_tmp @ pl_tmp
+        return PL_all
+            
     
     def plot_image(self, P, axs, *args, **kwargs):
         '''
@@ -65,7 +90,7 @@ class GeneralizedCamera:
         P = helper_functions.euclid_to_homo(P)
         P_local = tmp @ P
         N = P.shape[1]
-        masks = np.zeros((self.num_cams,1,N))
+        masks = np.zeros((self.num_cams,1,N), dtype=bool)
         p_all = np.zeros((self.num_cams,2,N))
         for i, c in enumerate(self.cams):
             axs[0, i].set_title('Axis [0, '+str(i)+']')

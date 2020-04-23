@@ -13,7 +13,7 @@ class Camera:
     '''
     Class for a central projection camera model. 
     '''
-    def __init__(self, focal=6*1e-3, resolution = (640,480), pp = (320,240), pix_siz = (5*1e-6,5*1e-6) , rot=np.eye(3), trans=np.zeros((3,1)), noise=0):
+    def __init__(self, focal=6*1e-3, resolution = (640,480), pp = (320,240), pix_siz = (5*1e-6,5*1e-6) , rot=np.eye(3), trans=np.zeros((3,1)), noise=0.01):
         self.f=focal
         self.res = np.array([resolution[0], resolution[1]])
         self.cx = pp[0]
@@ -78,6 +78,7 @@ class Camera:
         p = self.P @ P
         p = helper_functions.homo_to_euclid(p)
         p = p + self.noise * np.eye(2) @ np.random.randn(p.shape[0], p.shape[1])
+        tmp=self.noise * np.eye(2) @ np.random.randn(p.shape[0], p.shape[1])
         #check bounds of the points and make then -1 if they are out of bounds
         mask = ((0 <= p[0]) & (p[0] < self.res[0])) & ((0 <= p[1]) & (p[1] < self.res[1]))
         return p , mask
@@ -101,7 +102,7 @@ class Camera:
         self.poseR = self.poseR  @ rot
         self.R = self.poseR.transpose()
         self.t = -1 * self.R @ self.poset
-        tmp = helper_functions.compose_T(self.R, self.t.transpose())[:-1, :]
+        tmp = helper_functions.compose_T(self.R, self.t.T)[:-1, :]
         self.P = self.K @ tmp 
 
     def plot_image(self, P, ax, *args, **kwargs):
@@ -134,10 +135,9 @@ class Camera:
         Parameters
         ----------
         p : 2XN image coordinates
-
         Returns
         -------
-        PL : 6 X N plucker coordinates of p
+        PL : 6 X N plucker coordinates of p each element of the form (q,m)
         '''
         pp = self.get_normalized_coords(p)
         m = np.zeros((3,p.shape[1]))

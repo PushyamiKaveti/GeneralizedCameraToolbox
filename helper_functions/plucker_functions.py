@@ -22,7 +22,7 @@ class Plucker:
 
         '''
         self.l = p2 - p1
-        self.w = np.cross(p1, self.l )
+        self.m = np.cross(p1, self.l )
         
     def from_point_dir(self, p1, d):
         '''
@@ -39,7 +39,7 @@ class Plucker:
 
         '''
         self.l = d
-        self.w = np.cross(p1,d)
+        self.m = np.cross(p1,d)
         
     def from_dir_moment(self, d, m):
         '''
@@ -54,7 +54,7 @@ class Plucker:
             DESCRIPTION.
         '''
         self.l = d
-        self.w = m
+        self.m = m
         
     def __init__(self, p1, p2, typ='default'):
         if typ == 'default':
@@ -76,7 +76,7 @@ class Plucker:
             DESCRIPTION.
 
         '''
-        d = np.norm(self.w)/ np.linalg.norm(self.l)
+        d = np.norm(self.m)/ np.linalg.norm(self.l)
         return d
     
     def closest_point_to_origin(self):
@@ -90,7 +90,7 @@ class Plucker:
             DESCRIPTION.
 
         '''
-        p = np.cross(self.l , self.w)/ np.dot(self.l, self.l)
+        p = np.cross(self.l , self.m)/ np.dot(self.l, self.l)
         return p
     
     @staticmethod
@@ -158,12 +158,12 @@ class Plucker:
             DESCRIPTION.
 
         '''
-        if is_parallel(pl1, pl2) and reciprocal_product(pl1, pl2) > 10*np.finfo(float).eps :
+        if Plucker.is_parallel(pl1, pl2) and Plucker.reciprocal_product(pl1, pl2) > 10*np.finfo(float).eps :
             return 0
         else:
-            tmp = np.dot(pl1.m, pl2.l) * np.eye(3) + np.outer(pl1.l, pl2.m) - np.outer(pl2.l - pl1.m)
+            tmp = np.dot(pl1.m, pl2.l) * np.eye(3) + np.outer(pl1.l, pl2.m) - np.outer(pl2.l , pl1.m)
             c = np.cross(pl1.l,pl2.l)
-            p = tmp * c / np.dot(c,c)
+            p = tmp @ c / np.dot(c,c)
             return p
 
     @staticmethod
