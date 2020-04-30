@@ -13,7 +13,7 @@ class Camera:
     '''
     Class for a central projection camera model. 
     '''
-    def __init__(self, focal=6*1e-3, resolution = (640,480), pp = (320,240), pix_siz = (5*1e-6,5*1e-6) , rot=np.eye(3), trans=np.zeros((3,1)), noise=0.01):
+    def __init__(self, focal=6*1e-3, resolution = (640,480), pp = (320,240), pix_siz = (5*1e-6,5*1e-6) , rot=np.eye(3), trans=np.zeros((3,1)), noise=0.5):
         self.f=focal
         self.res = np.array([resolution[0], resolution[1]])
         self.cx = pp[0]
