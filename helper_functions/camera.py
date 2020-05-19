@@ -127,7 +127,7 @@ class Camera:
         ax.plot(pp[0, :], pp[1, :], *args, **kwargs)
         return p, mask
     
-    def get_plucker_coords(self,p):
+    def get_plucker_coords(self,p, normalize=True):
         '''
         Method to convert the 2D image coordinates into 6D plucker vectors
         in the camera coordinate frame. For a central camera model where the
@@ -139,7 +139,12 @@ class Camera:
         -------
         PL : 6 X N plucker coordinates of p each element of the form (q,m)
         '''
-        pp = self.get_normalized_coords(p)
+        if normalize:
+            pp = self.get_normalized_coords(p)
+        else:
+            pp = helper_functions.euclid_to_homo(p)
+            for i in range(pp.shape[1]) :
+                pp[:,i] = pp[:,i]/np.linalg.norm(pp[:,i])
         m = np.zeros((3,p.shape[1]))
         pp = np.vstack((pp,m))
         return pp

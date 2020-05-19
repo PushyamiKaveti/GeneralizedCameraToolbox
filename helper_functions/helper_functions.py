@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 import sys
 from random_geometry_points.sphere import Sphere
+import math
 
 def theta_2_rot2d(theta):
     ''' 
@@ -31,6 +32,22 @@ def rot2d_2_theta(R):
     Return rotation angle radians given a 2D rotation matrix
     '''
     return np.arctan2(R[1,0],R[0,0])
+
+def rotationMatrixToEulerAngles(R) :
+    sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
+
+    singular = sy < 1e-6
+
+    if  not singular :
+        x = math.atan2(R[2,1] , R[2,2])
+        y = math.atan2(-R[2,0], sy)
+        z = math.atan2(R[1,0], R[0,0])
+    else :
+        x = math.atan2(-R[1,2], R[1,1])
+        y = math.atan2(-R[2,0], sy)
+        z = 0
+
+    return np.array([x, y, z])
 
 def compose_T(R,t):
     '''
@@ -217,13 +234,22 @@ def initialize_2d_plot(number=None, title='Plot', axis_labels=['x', 'y'],axis_eq
 def initialize_2d_plot_multi(number=None,num_rows=1,num_cols=2, title='Plot', axis_labels=['x', 'y'],axis_equal=False):
     fig, axs = plt.subplots(num_rows, num_cols)
     fig.suptitle(title)
-    for ax in axs:
-        ax.set_xlabel(axis_labels[0])
-        ax.set_ylabel(axis_labels[1])
-        if axis_equal:
-            ax.axis('equal')
+    if axs.ndim == 1:
+        for ax in axs:
+            ax.set_xlabel(axis_labels[0])
+            ax.set_ylabel(axis_labels[1])
+            if axis_equal:
+                ax.axis('equal')
+        return fig,axs[np.newaxis, :]
+    else:
+        for ax_row in axs:
+            for ax in ax_row:
+                ax.set_xlabel(axis_labels[0])
+                ax.set_ylabel(axis_labels[1])
+                if axis_equal:
+                    ax.axis('equal')
     #fig.subplots_adjust(0.1,0.1,.9,.9) # Make the plot tight
-    return fig,axs[np.newaxis, :]
+        return fig,axs
 
 def rectangle_xy(width = 1, height = 1):
     return np.array([[ width/2,  height/2, 0],
@@ -257,10 +283,10 @@ def lines_between_rect(axes, vertices1, vertices2, *args, **kwargs):
         pts = np.vstack((v1,v2))
         axes.plot(pts[:,0], pts[:,1], pts[:,2], *args, **kwargs)
 
-def plot_camera(axes, pose_wT_cam, f=1.0, *args, **kwargs):
+def plot_camera(axes, pose_wT_cam, f=1.0, scale=1, *args, **kwargs):
    
-    opt_cent_rect_P_cam = rectangle_xy(width=1.0, height=1.0)
-    img_plane_rect_P_cam = rectangle_xy(width=2.0, height=2.0)+np.array([0,0,f])
+    opt_cent_rect_P_cam = rectangle_xy(width=1.0/scale, height=1.0/scale)
+    img_plane_rect_P_cam = rectangle_xy(width=2.0/scale, height=2.0/scale)+np.array([0,0,f*2/scale])
     opt_cent_rect_P_w = transform_3d_pts(opt_cent_rect_P_cam, pose_wT_cam)
     img_plane_rect_P_w = transform_3d_pts(img_plane_rect_P_cam, pose_wT_cam)
     plot_3d_rect(axes, opt_cent_rect_P_w, *args, **kwargs )
@@ -296,7 +322,7 @@ def plot_3Dvector(axes, V, origin = np.zeros(3)):
     pts = np.vstack((pt1,pt2))
     axes.plot(pts[:,0], pts[:,1], pts[:,2], color='grey',linewidth = 1 )
     
-def plot_cam_array(axes, T_array, wTa, *args, **kwargs):
+def plot_cam_array(axes, T_array, wTa, scale=1.0, *args, **kwargs):
     '''
     Plot a camera array where:
       T_array is N x 4 x 4 array defining the camera poses in the array
@@ -304,7 +330,7 @@ def plot_cam_array(axes, T_array, wTa, *args, **kwargs):
     '''
     wT_array = wTa @ T_array
     for cam_num, wTc in enumerate(wT_array):
-        plot_camera(axes, wTc, f=1.0, *args, **kwargs)
+        plot_camera(axes, wTc, f=1.0, scale=scale, *args, **kwargs)
         if cam_num>0:
             wtc_prev = wT_array[cam_num-1]
             pts = np.vstack((wTc[:-1,-1], wtc_prev[:-1,-1]))
